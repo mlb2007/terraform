@@ -16,7 +16,9 @@ resource "aws_instance" "ec2-instance" {
   subnet_id = aws_subnet.ec2_public_1.id
 
   user_data = "${base64encode(local.user_data)}"
-   
+
+  iam_instance_profile = aws_iam_instance_profile.ec2-role-summary.name
+
   tags = {
       Name = var.ami_name
   }
