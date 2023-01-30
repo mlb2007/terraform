@@ -14,81 +14,24 @@ resource "aws_subnet" "ec2_public_1" {
     Name = "ec2-public-1"
   }
 }
-resource "aws_subnet" "ec2_public_2" {
-  cidr_block        = "10.0.2.0/24"
-  vpc_id            = aws_vpc.ec2-vpc.id
-  availability_zone = var.availability_zones[1]
-  tags = {
-    Name = "ec2-public-2"
-  }
-}
 
-# Private subnets
-resource "aws_subnet" "ec2_private_1" {
-  cidr_block        = "10.0.3.0/24"
-  vpc_id            = aws_vpc.ec2-vpc.id
-  availability_zone = var.availability_zones[0]
-  tags = {
-    Name = "ec2-private-1"
-  }
-}
-resource "aws_subnet" "ec2_private_2" {
-  cidr_block        = "10.0.4.0/24"
-  vpc_id            = aws_vpc.ec2-vpc.id
-  availability_zone = var.availability_zones[1]
-  tags = {
-    Name = "ec2-private-2"
-  }
-}
-
-# Route tables and association with the subnets
+# Route tables for the subnets
 resource "aws_route_table" "ec2_public" {
   vpc_id = aws_vpc.ec2-vpc.id
 }
+
 resource "aws_route_table_association" "ec2_public_1" {
   route_table_id = aws_route_table.ec2_public.id
   subnet_id      = aws_subnet.ec2_public_1.id
-}
-resource "aws_route_table_association" "ec2_public_2" {
-  route_table_id = aws_route_table.ec2_public.id
-  subnet_id      = aws_subnet.ec2_public_2.id
-}
-
-resource "aws_route_table" "ec2_private" {
-  vpc_id = aws_vpc.ec2-vpc.id
-}
-resource "aws_route_table_association" "ec2_private_1" {
-  route_table_id = aws_route_table.ec2_private.id
-  subnet_id      = aws_subnet.ec2_private_1.id
-}
-resource "aws_route_table_association" "ec2_private_2" {
-  route_table_id = aws_route_table.ec2_private.id
-  subnet_id      = aws_subnet.ec2_private_2.id
 }
 
 # Internet Gateway for the public subnet
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.ec2-vpc.id
 }
+
 resource "aws_route" "ec2_internet_gateway" {
   route_table_id         = aws_route_table.ec2_public.id
   gateway_id             = aws_internet_gateway.igw.id
   destination_cidr_block = "0.0.0.0/0"
 }
-
-# NAT gateway
-#resource "aws_eip" "ec2_nat_gateway" {
-#  vpc                       = true
-#  associate_with_private_ip = "10.0.0.5"
-#  depends_on                = [aws_internet_gateway.igw]
-#}
-#resource "aws_nat_gateway" "nat" {
-#  allocation_id = aws_eip.ec2_nat_gateway.id
-#  subnet_id     = aws_subnet.ec2_public_1.id
-#}
-#resource "aws_route" "ec2_nat_gateway" {
-#  route_table_id         = aws_route_table.ec2_private.id
-#  nat_gateway_id         = aws_nat_gateway.nat.id
-#  destination_cidr_block = "0.0.0.0/0"
-#}
-
