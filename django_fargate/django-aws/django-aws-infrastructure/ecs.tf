@@ -69,6 +69,11 @@ resource "aws_ecs_service" "prod_backend_web" {
     subnets          = [aws_subnet.prod_private_1.id, aws_subnet.prod_private_2.id]
     assign_public_ip = false
   }
+
+  # to peer into ECS instance 
+  platform_version = "1.4.0"
+  enable_execute_command = true
+
 }
 
 # Security Group
