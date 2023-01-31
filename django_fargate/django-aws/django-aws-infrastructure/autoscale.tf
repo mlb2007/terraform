@@ -18,7 +18,11 @@ resource "aws_appautoscaling_policy" "prod_backend_web_cpu" {
   target_tracking_scaling_policy_configuration {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"
+      #### Other metrics ####
+      #predefined_metric_type = "ALBRequestCountPerTarget"
+      #predefined_metric_type = "ECSServiceAverageMemoryUtilization"
     }
+    # this is a percentage value (default), after 80% CPU util, spawn new task
     target_value = 80
   }
 
