@@ -1,0 +1,9 @@
+#! /bin/bash
+
+# Ref: https://dev.to/daiquiri_team/deploying-django-application-on-aws-with-terraform-ecs-autoscaling-2oc5
+# max number of files that can be open
+ulimit -n 100000
+
+# Apache server ping tests and the https is some magic website
+# -c 1000 concurrent number of requests, -n 100000 is the total number of requests.
+ab -n 100000 -c 1000 <Load_balancer_dns>/ping/
