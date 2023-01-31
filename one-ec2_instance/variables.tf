@@ -1,5 +1,6 @@
 # Ref: https://medium.com/@hmalgewatta/setting-up-an-aws-ec2-instance-with-ssh-access-using-terraform-c336c812322f
-
+# Iam roles: https://skundunotes.com/2021/11/16/attach-iam-role-to-aws-ec2-instance-using-terraform/
+#
 variable "region" {
   description = "The AWS region to create resources in."
   default     = "us-west-2"
