@@ -23,11 +23,14 @@ resource "aws_ecs_task_definition" "prod_backend_web" {
     {
       region     = var.region
       name       = "prod-backend-web"
-      #image      = aws_ecr_repository.backend.repository_url
       image      = var.docker_image_url_django  
       command    = ["gunicorn", "-w", "3", "-b", ":8000", "django_aws.wsgi:application"]
       log_group  = aws_cloudwatch_log_group.prod_backend.name
       log_stream = aws_cloudwatch_log_stream.prod_backend_web.name
+      rds_db_name  = local.db_name
+      rds_username = local.db_creds.username
+      rds_password = local.db_creds.password
+      rds_hostname = aws_db_instance.prod.address
     },
   )
   # required for calling APIs on behalf of ECS instance
@@ -102,6 +105,8 @@ resource "aws_security_group" "prod_ecs_backend" {
 # IAM roles and policies
 resource "aws_iam_role" "prod_backend_task" {
   name = "prod-backend-task"
+
+  # who can assume this role ? (trust policy)
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -115,16 +120,34 @@ resource "aws_iam_role" "prod_backend_task" {
       }
     ]
   })
+  
+  # permission policy
+  # instead of making policy and attaching to this role
+  # we make the policy inline
+  inline_policy {
+    name = "prod-backend-task-ssmmessages"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action   = [
+            "ssmmessages:CreateControlChannel",
+            "ssmmessages:CreateDataChannel",
+            "ssmmessages:OpenControlChannel",
+            "ssmmessages:OpenDataChannel",
+          ]
+          Effect   = "Allow"
+          Resource = "*"
+        },
+      ]
+    })
+  }
 }
 
 resource "aws_iam_role" "ecs_task_execution" {
   name = "ecs-task-execution"
 
-  # 
-  # if someone wants to assume this role, is there a policy for it ?
-  # Yes, only ecs-tasks.amazonaws.com can assume this role and that "principal"
-  # can do one action, which is "sts:AssumeRole"
-  #
+  # who do u trust for this iam role ? (trust policy)
   assume_role_policy = jsonencode(
     {
       Version = "2012-10-17",
@@ -142,26 +165,13 @@ resource "aws_iam_role" "ecs_task_execution" {
   )
 }
 
-## instead of hardcodings above, we can use data and refer to this data above
-# Do we need to jsonencode this ?
-#data "aws_iam_policy_document" "ecs_task_assume_role" {
-#  statement {
-#    actions = ["sts:AssumeRole"]
-#
-#    principals {
-#      type = "Service"
-#      identifiers = ["ecs-tasks.amazonaws.com"]
-#    }
-#  }
-#}
-
-
 # Now the IAM role must have some policy. In this case it simply copies
 # the policy that allows ECS tasks to be executed in this role ...
 resource "aws_iam_role_policy_attachment" "ecs-task-execution-role-policy-attachment" {
   role       = aws_iam_role.ecs_task_execution.name
-
-  # this is hard coded AWS task execution policy ...
+  
+  # permissions policy, attached to roles, a default Task Execution Policy is
+  # used
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 
 }
