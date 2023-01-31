@@ -19,4 +19,6 @@ RUN pip install --no-cache-dir -r /requirements.txt
 WORKDIR /app
 COPY . /app
 
+# Django static files
+RUN ./manage.py collectstatic --noinput
 
