@@ -1,3 +1,5 @@
+# Ref: https://medium.com/@hmalgewatta/setting-up-an-aws-ec2-instance-with-ssh-access-using-terraform-c336c812322f
+
 variable "region" {
   description = "The AWS region to create resources in."
   default     = "us-west-2"
